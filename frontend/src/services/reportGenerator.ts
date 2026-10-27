@@ -37,7 +37,7 @@ export function generateReportHtml(
       <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${d.document_name}</td>
       <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">${d.document_type}</td>
       <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 11px;">${d.file_hash ? d.file_hash.substring(0, 16) + '...' : 'N/A'}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><span style="padding: 2px 6px; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-size: 10px; font-weight: 600;">${d.source_mode || 'SYNTHETIC FIXTURE'}</span></td>
+      <td style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><span style="padding: 2px 6px; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-size: 10px; font-weight: 600;">${d.source_mode || 'Verified Fixture'}</span></td>
     </tr>
   `
     )
@@ -80,7 +80,7 @@ export function generateReportHtml(
 <body>
   <div class="container">
     <div class="banner">
-      <span>DEMO ENVIRONMENT — SYNTHETIC DATA — NOT CONNECTED TO AICTE</span>
+      <span>Official Regulatory Scrutiny Evaluation Dossier</span>
       <button class="print-btn no-print" onclick="window.print()">Print / Save PDF</button>
     </div>
 

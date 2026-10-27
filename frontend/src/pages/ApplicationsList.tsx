@@ -98,29 +98,27 @@ export const ApplicationsList: React.FC<ApplicationsListProps> = ({ onOpenApplic
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[11px] tracking-wider">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[10px] tracking-wider">
               <tr>
-                <th className="py-3 px-4">Application ID</th>
-                <th className="py-3 px-4">Institution Name</th>
-                <th className="py-3 px-4">Category (Nature of App)</th>
-                <th className="py-3 px-3 text-center">Docs</th>
-                <th className="py-3 px-3 text-center">Findings</th>
-                <th className="py-3 px-4">Workflow Status</th>
-                <th className="py-3 px-4">Compliance Outcome</th>
-                <th className="py-3 px-4">Assigned Officer</th>
-                <th className="py-3 px-4 text-right">Action</th>
+                <th className="py-2.5 px-3">Application ID</th>
+                <th className="py-2.5 px-3">Institution Name</th>
+                <th className="py-2.5 px-3">Category</th>
+                <th className="py-2.5 px-2 text-center">Findings</th>
+                <th className="py-2.5 px-3">Workflow Status</th>
+                <th className="py-2.5 px-3">Compliance</th>
+                <th className="py-2.5 px-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
                     Loading applications queue...
                   </td>
                 </tr>
               ) : applications.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                  <td colSpan={7} className="py-8 text-center text-slate-400">
                     No matching applications found.
                   </td>
                 </tr>
@@ -129,48 +127,47 @@ export const ApplicationsList: React.FC<ApplicationsListProps> = ({ onOpenApplic
                   <tr
                     key={app.id}
                     onClick={() => onOpenApplication(app.id)}
-                    className="hover:bg-blue-50/30 transition-colors cursor-pointer group"
+                    className="hover:bg-slate-50 transition-colors cursor-pointer group"
                   >
-                    <td className="py-3 px-4 font-mono font-bold text-blue-700 whitespace-nowrap">
+                    <td className="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">
                       {app.id}
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900">{app.institution_name}</div>
-                      <div className="text-[11px] text-slate-400">AY: {app.academic_year}</div>
+                    <td className="py-2.5 px-3">
+                      <div className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors">
+                        {app.institution_name}
+                      </div>
+                      {/* Progressive hover reveal for secondary metadata */}
+                      <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-5 group-hover:opacity-100 transition-all duration-150 text-[10px] text-slate-400 pt-0.5">
+                        AY {app.academic_year} · Officer: {app.assigned_officer}
+                      </div>
                     </td>
-                    <td className="py-3 px-4 text-slate-600 max-w-xs truncate">
+                    <td className="py-2.5 px-3 text-slate-600 max-w-xs truncate">
                       {app.nature_of_application}
                     </td>
-                    <td className="py-3 px-3 text-center font-semibold text-slate-700">
-                      {app.documents_count || 0}
-                    </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="py-2.5 px-2 text-center">
                       {(app.findings_count || 0) > 0 ? (
-                        <span className="font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full text-[11px]">
+                        <span className="font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full text-[10px]">
                           {app.findings_count}
                         </span>
                       ) : (
-                        <span className="text-slate-400">0</span>
+                        <span className="text-slate-400 text-[11px]">0</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       <StatusChip type="workflow" value={app.workflow_status} />
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       <StatusChip type="compliance" value={app.compliance_outcome} />
                     </td>
-                    <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
-                      {app.assigned_officer}
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onOpenApplication(app.id);
                         }}
-                        className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-300 text-blue-700 hover:bg-blue-50 rounded group-hover:border-blue-500 transition-colors inline-flex items-center gap-1"
+                        className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-300 text-blue-700 hover:bg-blue-50 rounded group-hover:border-blue-400 transition-colors inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <span>Open Workspace</span>
+                        <span>Workspace</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </td>

@@ -124,16 +124,18 @@ export const DocumentsCatalogue: React.FC = () => {
                 <tr
                   key={doc.id}
                   onClick={() => setSelectedDoc(doc)}
-                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="hover:bg-slate-50 transition-colors cursor-pointer group"
                 >
                   <td className="py-2.5 px-3 font-mono text-[11px] text-blue-700 font-bold whitespace-nowrap">
                     <div>{doc.section}</div>
                     <div className="text-[10px] text-slate-400 font-normal">{doc.annexure}</div>
                   </td>
                   <td className="py-2.5 px-3">
-                    <p className="text-slate-900 line-clamp-2 leading-relaxed">{doc.text}</p>
+                    <p className="text-slate-900 line-clamp-1 leading-relaxed">{doc.text}</p>
                     {doc.possible_verifier && (
-                      <span className="text-[10px] text-slate-500 font-mono">Verifier: {doc.possible_verifier}</span>
+                      <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-5 group-hover:opacity-100 transition-all duration-150 text-[10px] text-slate-400 font-mono pt-0.5">
+                        Verifier: {doc.possible_verifier}
+                      </div>
                     )}
                   </td>
                   <td className="py-2.5 px-2 text-center font-mono text-slate-600">{doc.page || '—'}</td>

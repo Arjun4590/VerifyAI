@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, ShieldAlert, FileText, ExternalLink, RefreshCw } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, FileText, ExternalLink, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../services/api';
-import { Application } from '../types';
+import { Application, DocumentItem } from '../types';
 import { StatusChip } from '../components/StatusChip';
 
 export const Verification: React.FC = () => {
   const [app, setApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
 
   useEffect(() => {
     api.getApplicationDetail('VA-DEMO-2026-014').then((res) => {
@@ -28,6 +29,10 @@ export const Verification: React.FC = () => {
 
   if (!app) return null;
 
+  const toggleDocExpand = (docId: string) => {
+    setExpandedDocId(expandedDocId === docId ? null : docId);
+  };
+
   return (
     <div className="space-y-4">
       {/* Title */}
@@ -36,21 +41,21 @@ export const Verification: React.FC = () => {
           Document Verification & Integrity
         </h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          SHA-256 file hashes, digital stamp verification, and simulated authority checks for {app.id}.
+          SHA-256 file hashes, digital stamp verification, and authority registry checks for {app.id}.
         </p>
       </div>
 
-      {/* Simulated External Issuer Check Card */}
-      <div className="bg-white border border-amber-200 rounded-lg p-3.5 shadow-2xs space-y-2.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-100 pb-2">
+      {/* Authority Registry Check Summary Card */}
+      <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-red-600" />
+            <ShieldAlert className="w-4 h-4 text-amber-600" />
             <span className="text-xs font-bold text-slate-900">
-              State Fire Services Cross-Check (Simulated)
+              State Fire Services Registry Cross-Check
             </span>
           </div>
-          <span className="text-[10px] font-mono font-bold text-red-800 bg-red-100 border border-red-200 px-2 py-0.5 rounded self-start sm:self-auto">
-            SIMULATED — NO LIVE ISSUER API
+          <span className="text-[10px] font-mono text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded self-start sm:self-auto">
+            Simulated Authority Connector
           </span>
         </div>
 
@@ -70,72 +75,99 @@ export const Verification: React.FC = () => {
         </div>
       </div>
 
-      {/* Verification Summary Table */}
+      {/* Verification Summary Table (Progressive Disclosure) */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
-        <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200">
+        <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
-            Documentary Checks Summary ({app.documents?.length || 0} Files)
+            Documentary Checks ({app.documents?.length || 0} Files)
           </h2>
+          <span className="text-[11px] text-slate-400">Click row for cryptographic hash & audit record</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase text-[10px]">
-              <tr>
-                <th className="py-2.5 px-3">Document</th>
-                <th className="py-2.5 px-3">Check Performed</th>
-                <th className="py-2.5 px-3">Result</th>
-                <th className="py-2.5 px-3">Source / Mode</th>
-                <th className="py-2.5 px-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {app.documents?.map((doc) => (
-                <tr key={doc.id} className="hover:bg-slate-50">
-                  <td className="py-2.5 px-3">
-                    <div className="font-semibold text-slate-900">{doc.document_name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">SHA-256: {doc.file_hash?.substring(0, 20)}...</div>
-                  </td>
-                  <td className="py-2.5 px-3 text-slate-700">
-                    {doc.document_type === 'Fire Safety Certificate'
-                      ? 'External Registry Check'
-                      : doc.document_type === 'Affidavit'
-                      ? 'Declaration Consistency'
-                      : 'File Hash & Stamp Check'}
-                  </td>
-                  <td className="py-2.5 px-3">
-                    {doc.document_type === 'Fire Safety Certificate' ? (
-                      <StatusChip type="verification" value="Mismatch detected" />
-                    ) : (
-                      <StatusChip type="verification" value="Verified" />
-                    )}
-                  </td>
-                  <td className="py-2.5 px-3">
-                    {doc.document_type === 'Fire Safety Certificate' ? (
-                      <span className="text-[10px] font-mono text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded font-semibold">
-                        SIMULATED
+        <div className="divide-y divide-slate-100">
+          {app.documents?.map((doc) => {
+            const isExpanded = expandedDocId === doc.id;
+            const isFireDoc = doc.document_type === 'Fire Safety Certificate';
+            const checkType = isFireDoc
+              ? 'External Registry Check'
+              : doc.document_type === 'Affidavit'
+              ? 'Declaration Consistency'
+              : 'File Hash & Stamp Check';
+            const resultVal = isFireDoc ? 'Mismatch detected' : 'Verified';
+            const sourceMode = isFireDoc ? 'Mock Authority' : 'File Integrity';
+
+            return (
+              <div key={doc.id} className="group transition-colors">
+                {/* Main Compact Row */}
+                <div
+                  onClick={() => toggleDocExpand(doc.id)}
+                  className="p-3 hover:bg-slate-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs cursor-pointer select-none"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors">
+                        {doc.document_name}
                       </span>
-                    ) : (
-                      <span className="text-[10px] font-mono text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded">
-                        FILE INTEGRITY
+                      <span className="text-[10px] text-slate-500 bg-slate-100 px-1 rounded">
+                        {doc.page_count} {doc.page_count === 1 ? 'Page' : 'Pages'}
                       </span>
+                    </div>
+
+                    {/* Smooth Hover / Focus preview */}
+                    {!isExpanded && (
+                      <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-5 group-hover:opacity-100 transition-all duration-150 text-[10px] text-slate-400 font-mono pt-0.5 truncate">
+                        Check: {checkType} · Source: {sourceMode}
+                      </div>
                     )}
-                  </td>
-                  <td className="py-2.5 px-3 text-right">
-                    <a
-                      href={`/documents/${doc.document_name}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-2 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>View PDF</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-shrink-0 self-start sm:self-auto">
+                    <span className="text-slate-600 hidden md:inline text-[11px]">{checkType}</span>
+                    <StatusChip type="verification" value={resultVal} />
+                    <span className="text-[10px] font-mono text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                      {sourceMode}
+                    </span>
+                    <span className="text-blue-600 hover:text-blue-800 text-xs font-semibold inline-flex items-center gap-0.5">
+                      <span>{isExpanded ? 'Hide' : 'Inspect'}</span>
+                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expanded Details Panel */}
+                {isExpanded && (
+                  <div className="px-4 pb-3.5 pt-2 bg-slate-50/80 border-t border-slate-100 space-y-2 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Cryptographic Hash</span>
+                        <p className="font-mono text-[11px] text-slate-700 bg-white p-1.5 rounded border border-slate-200 break-all select-all">
+                          SHA-256: {doc.file_hash}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Check Outcome</span>
+                        <p className="text-slate-700">
+                          {isFireDoc
+                            ? 'Simulated query returned: Expired on 31 Dec 2025. Flagged for officer review.'
+                            : 'Digital file structure intact. File hash validated against submission record.'}
+                        </p>
+                        <a
+                          href={`/documents/${doc.document_name}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-blue-700 hover:text-blue-900 font-semibold"
+                        >
+                          <span>Open PDF Document</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

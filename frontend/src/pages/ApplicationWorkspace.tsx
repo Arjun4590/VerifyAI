@@ -23,6 +23,8 @@ import { EvidenceDrawer } from '../components/EvidenceDrawer';
 import { ClarificationModal, EscalationModal, DispositionModal } from '../components/ActionModals';
 import { openReportWindow } from '../services/reportGenerator';
 
+import { CompactFindingCard } from '../components/CompactFindingCard';
+
 interface ApplicationWorkspaceProps {
   applicationId: string;
   onBack: () => void;
@@ -38,8 +40,7 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
   const [audits, setAudits] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [validating, setValidating] = useState(false);
-  // Default tab prioritizes findings per Section 5.3!
-  const [activeTab, setActiveTab] = useState<'findings' | 'summary' | 'documents' | 'data' | 'audit'>('findings');
+  const [activeTab, setActiveTab] = useState<'findings' | 'documents' | 'data' | 'summary' | 'audit'>('findings');
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -149,7 +150,7 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
   const isAdmin = currentRole === 'system_admin';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {/* 1. Compact Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-200">
         <button
@@ -205,7 +206,7 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
             </button>
           )}
 
-          {/* Open Printable Report (100% frontend!) */}
+          {/* Open Printable Report */}
           <button
             onClick={handleOpenReport}
             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors border border-slate-300 cursor-pointer"
@@ -232,48 +233,35 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
         </div>
       )}
 
-      {/* 2. Workspace Profile Strip */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.2 rounded">
+      {/* 2. Streamlined Application Summary Card (Progressive Disclosure) */}
+      <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap text-xs">
+              <span className="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
                 {app.id}
               </span>
-              <span className="text-xs text-slate-500">
-                AY: <strong className="text-slate-900">{app.academic_year}</strong>
-              </span>
+              <span className="text-slate-600 font-medium">AY {app.academic_year}</span>
               <span className="text-slate-300">•</span>
-              <span className="text-xs text-slate-600 truncate max-w-md">{app.nature_of_application}</span>
+              <span className="text-slate-600 truncate max-w-md">{app.nature_of_application}</span>
+              {app.assigned_officer && (
+                <>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-slate-500">
+                    Officer: <strong className="text-slate-700 font-medium">{app.assigned_officer}</strong>
+                  </span>
+                </>
+              )}
             </div>
-            <h1 className="text-lg font-bold text-slate-900 m-0 leading-tight">
+            <h1 className="text-base sm:text-lg font-bold text-slate-900 m-0 leading-tight truncate">
               {app.institution_name}
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap self-start md:self-center flex-shrink-0">
             <StatusChip type="workflow" value={app.workflow_status} />
             <StatusChip type="compliance" value={app.compliance_outcome} />
-          </div>
-        </div>
-
-        {/* Status Strip Pills */}
-        <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-4 text-xs text-slate-600">
-          <div>
-            <span className="text-slate-400 mr-1.5">Verification:</span>
             <StatusChip type="verification" value={app.verification_status} />
-          </div>
-          <div>
-            <span className="text-slate-400 mr-1.5">Rule Set:</span>
-            <span className="font-mono font-semibold text-slate-800">{app.rule_set} v{app.rule_set_version}</span>
-          </div>
-          <div>
-            <span className="text-slate-400 mr-1.5">Cutoff Date:</span>
-            <span className="font-mono font-semibold text-slate-800">{app.evaluation_date}</span>
-          </div>
-          <div>
-            <span className="text-slate-400 mr-1.5">Assigned Officer:</span>
-            <span className="font-medium text-slate-800">{app.assigned_officer}</span>
           </div>
         </div>
       </div>
@@ -282,16 +270,16 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
       <div className="border-b border-slate-200">
         <nav className="flex space-x-6 text-xs font-semibold">
           {[
-            { id: 'findings', label: `Findings & Observations (${app.findings?.length || 0})` },
+            { id: 'findings', label: `Findings (${app.findings?.length || 0})` },
             { id: 'documents', label: `Documents (${app.documents?.length || 0})` },
-            { id: 'data', label: `Declared Data (${app.fields?.length || 0})` },
-            { id: 'summary', label: 'Institutional Summary' },
+            { id: 'data', label: `Application Data (${app.fields?.length || 0})` },
+            { id: 'summary', label: 'Institutional Details' },
             { id: 'audit', label: `Audit Trail (${audits.length})` },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`py-2.5 border-b-2 font-medium transition-colors cursor-pointer ${
+              className={`py-2 border-b-2 font-medium transition-colors cursor-pointer ${
                 activeTab === tab.id
                   ? 'border-blue-700 text-blue-700 font-bold'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -303,83 +291,46 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
         </nav>
       </div>
 
-      {/* Tab 1: Findings (DEFAULT VIEW — Prioritizing Actionable Review) */}
+      {/* Tab 1: Findings (DEFAULT VIEW — Progressive Disclosure Cards) */}
       {activeTab === 'findings' && (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {(!app.findings || app.findings.length === 0) ? (
             <div className="bg-white border border-slate-200 rounded-lg p-8 text-center text-slate-400 text-xs">
               No findings recorded. Click "Run Validation" to evaluate rules.
             </div>
           ) : (
             app.findings.map((f) => (
-              <div
+              <CompactFindingCard
                 key={f.id}
-                onClick={() => setSelectedFinding(f)}
-                className={`p-3.5 bg-white border rounded-lg hover:border-blue-400 transition-all cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs ${
-                  f.outcome === 'Possible deficiency' ? 'border-red-200 bg-red-50/10' :
-                  f.outcome === 'Needs clarification' ? 'border-amber-200 bg-amber-50/10' :
-                  'border-slate-200'
-                }`}
-              >
-                <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
-                      {f.rule_code}
-                    </span>
-                    <h3 className="text-xs font-bold text-slate-900 m-0">{f.title}</h3>
-                    <StatusChip type="compliance" value={f.outcome} />
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded uppercase ${
-                        f.review_status === 'confirmed'
-                          ? 'bg-red-100 text-red-800'
-                          : f.review_status === 'dismissed'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      {f.review_status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-600 line-clamp-1">{f.plain_reason}</p>
-                </div>
-
-                <div className="flex items-center gap-2 self-end md:self-center flex-shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedFinding(f);
-                    }}
-                    className="px-3 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-blue-700 rounded text-xs font-semibold cursor-pointer"
-                  >
-                    Inspect Evidence →
-                  </button>
-                </div>
-              </div>
+                finding={f}
+                onSelect={(finding) => setSelectedFinding(finding)}
+                isSelected={selectedFinding?.id === f.id}
+              />
             ))
           )}
         </div>
       )}
 
-      {/* Tab 2: Documents */}
+      {/* Tab 2: Documents (Progressive Disclosure) */}
       {activeTab === 'documents' && (
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-2xs space-y-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-2.5">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
-              Uploaded Supporting Documents
+              Uploaded Supporting Documents ({app.documents?.length || 0})
             </h2>
-            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-              SYNTHETIC DEMO FIXTURES
+            <span className="text-[11px] text-slate-400">
+              Verified file hashes and metadata
             </span>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {app.documents?.map((doc) => (
               <div
                 key={doc.id}
-                className="p-3 border border-slate-200 rounded-md hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs"
+                className="group p-2.5 border border-slate-200 rounded-md hover:border-blue-300 hover:bg-slate-50/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
               >
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
                       {doc.id}
                     </span>
@@ -388,16 +339,17 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
                       {doc.page_count} {doc.page_count === 1 ? 'Page' : 'Pages'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 font-mono truncate max-w-lg">
+                  {/* Progressive hover reveal for hash */}
+                  <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-5 group-hover:opacity-100 group-focus-within:max-h-5 group-focus-within:opacity-100 transition-all duration-150 text-[10px] text-slate-400 font-mono pt-0.5 truncate">
                     SHA-256: {doc.file_hash}
-                  </p>
+                  </div>
                 </div>
 
                 <a
                   href={`/documents/${doc.document_name}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded text-xs font-semibold inline-flex items-center gap-1 transition-colors self-start sm:self-auto cursor-pointer"
+                  className="px-2.5 py-1 bg-white hover:bg-blue-50 text-blue-700 border border-slate-300 hover:border-blue-300 rounded text-xs font-semibold inline-flex items-center gap-1 transition-colors self-start sm:self-auto cursor-pointer"
                 >
                   <span>Open PDF</span>
                   <ExternalLink className="w-3 h-3" />
@@ -407,6 +359,7 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
           </div>
         </div>
       )}
+
 
       {/* Tab 3: Declared Data */}
       {activeTab === 'data' && (
@@ -460,7 +413,9 @@ export const ApplicationWorkspace: React.FC<ApplicationWorkspaceProps> = ({
               <div><span className="text-slate-400">Application Type:</span> <strong className="text-slate-900">{app.nature_of_application}</strong></div>
               <div><span className="text-slate-400">Category ID:</span> <span className="font-mono">{app.category_id}</span></div>
               <div><span className="text-slate-400">Academic Year:</span> <span className="font-mono">{app.academic_year}</span></div>
-              <div><span className="text-slate-400">Officer:</span> <span>{app.assigned_officer}</span></div>
+              <div><span className="text-slate-400">Rule Set:</span> <span className="font-mono font-medium text-slate-800">{app.rule_set} v{app.rule_set_version}</span></div>
+              <div><span className="text-slate-400">Evaluation Cutoff:</span> <span className="font-mono font-medium text-slate-800">{app.evaluation_date}</span></div>
+              <div><span className="text-slate-400">Assigned Officer:</span> <span>{app.assigned_officer}</span></div>
             </div>
           </div>
 

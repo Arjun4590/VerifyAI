@@ -78,10 +78,15 @@ export const ReviewQueue: React.FC<ReviewQueueProps> = ({ onOpenApplication }) =
                 <tr
                   key={app.id}
                   onClick={() => onOpenApplication(app.id)}
-                  className="hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="hover:bg-slate-50 transition-colors cursor-pointer group"
                 >
-                  <td className="py-2.5 px-3 font-mono font-bold text-blue-700">{app.id}</td>
-                  <td className="py-2.5 px-3 font-semibold text-slate-900">{app.institution_name}</td>
+                  <td className="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">{app.id}</td>
+                  <td className="py-2.5 px-3">
+                    <div className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors">{app.institution_name}</div>
+                    <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-5 group-hover:opacity-100 transition-all duration-150 text-[10px] text-slate-400 pt-0.5">
+                      AY {app.academic_year} · Officer: {app.assigned_officer}
+                    </div>
+                  </td>
                   <td className="py-2.5 px-3 text-slate-600 max-w-xs truncate">{app.nature_of_application}</td>
                   <td className="py-2.5 px-2 text-center">
                     {(app.findings_count || 0) > 0 ? (
@@ -89,13 +94,13 @@ export const ReviewQueue: React.FC<ReviewQueueProps> = ({ onOpenApplication }) =
                         {app.findings_count}
                       </span>
                     ) : (
-                      <span className="text-slate-400">0</span>
+                      <span className="text-slate-400 text-[11px]">0</span>
                     )}
                   </td>
-                  <td className="py-2.5 px-3">
+                  <td className="py-2.5 px-3 whitespace-nowrap">
                     <StatusChip type="workflow" value={app.workflow_status} />
                   </td>
-                  <td className="py-2.5 px-3 text-slate-600">{app.assigned_officer}</td>
+                  <td className="py-2.5 px-3 text-slate-600 whitespace-nowrap">{app.assigned_officer}</td>
                   <td className="py-2.5 px-3 text-right">
                     <button
                       onClick={(e) => {

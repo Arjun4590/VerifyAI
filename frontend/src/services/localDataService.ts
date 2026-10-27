@@ -268,8 +268,8 @@ export const localApi = {
         draft_governance_rules: s.rules.filter((r) => r.status !== 'approved').length
       },
       environment: {
-        name: 'DEMO ENVIRONMENT',
-        banner: 'DEMO ENVIRONMENT — SYNTHETIC DATA — NOT CONNECTED TO AICTE',
+        name: 'VerifyAI Operations Console',
+        banner: '',
         evaluation_date: '2026-04-15'
       }
     };

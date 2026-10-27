@@ -133,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Footer Info */}
       <div className="pt-3 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-between">
         <span className="capitalize text-slate-600 font-medium">{currentRole.replace('_', ' ')}</span>
-        <span className="font-mono text-[10px] text-slate-600">Static Prototype</span>
+        <span className="font-mono text-[10px] text-slate-600">v2026.1</span>
       </div>
     </aside>
   );

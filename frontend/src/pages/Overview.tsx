@@ -173,21 +173,29 @@ export const Overview: React.FC<OverviewProps> = ({ onOpenApplication, onNavigat
                 <div
                   key={alert.id}
                   onClick={() => onOpenApplication(alert.application_id)}
-                  className="p-2.5 border border-slate-200 rounded-md hover:border-blue-400 hover:bg-blue-50/20 transition-all cursor-pointer flex items-center justify-between gap-3 text-xs"
+                  className="group p-2.5 border border-slate-200 rounded-md hover:border-blue-400 hover:bg-slate-50/70 transition-all cursor-pointer flex items-center justify-between gap-3 text-xs"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <span
                       className={`w-2 h-2 rounded-full flex-shrink-0 ${
                         alert.priority === 'high' ? 'bg-red-600' : 'bg-amber-500'
                       }`}
                     />
-                    <span className="font-semibold text-slate-900 truncate">{alert.title}</span>
-                    <span className="font-mono text-[11px] text-blue-700 bg-blue-50 px-1 rounded border border-blue-200 flex-shrink-0">
-                      {alert.application_id}
-                    </span>
-                    <span className="text-slate-500 text-[11px] truncate hidden md:inline">{alert.reason}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors truncate">
+                          {alert.title}
+                        </span>
+                        <span className="font-mono text-[10px] text-blue-700 bg-blue-50 px-1 rounded border border-blue-200 flex-shrink-0">
+                          {alert.application_id}
+                        </span>
+                      </div>
+                      <div className="max-h-0 opacity-0 overflow-hidden group-hover:max-h-5 group-hover:opacity-100 transition-all duration-150 text-[11px] text-slate-500 pt-0.5 truncate">
+                        {alert.reason}
+                      </div>
+                    </div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
                 </div>
               ))
             )}

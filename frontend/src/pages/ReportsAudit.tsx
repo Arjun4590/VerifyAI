@@ -45,6 +45,12 @@ export const ReportsAudit: React.FC = () => {
     }
   };
 
+  const [expandedAuditId, setExpandedAuditId] = useState<number | null>(null);
+
+  const toggleAuditExpand = (id: number) => {
+    setExpandedAuditId(expandedAuditId === id ? null : id);
+  };
+
   return (
     <div className="space-y-4">
       {/* Title */}
@@ -84,7 +90,7 @@ export const ReportsAudit: React.FC = () => {
         </button>
       </div>
 
-      {/* Global Audit Trail */}
+      {/* Global Audit Trail (Progressive Disclosure) */}
       <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 m-0">
@@ -107,7 +113,7 @@ export const ReportsAudit: React.FC = () => {
                 <th className="py-2.5 px-3">Official</th>
                 <th className="py-2.5 px-3">Action</th>
                 <th className="py-2.5 px-3">Target</th>
-                <th className="py-2.5 px-3">Justification / Notes</th>
+                <th className="py-2.5 px-3">Justification</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -120,19 +126,39 @@ export const ReportsAudit: React.FC = () => {
                   <td colSpan={5} className="py-8 text-center text-slate-400">No audit events recorded for this case.</td>
                 </tr>
               ) : (
-                audits.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">{a.created_at}</td>
-                    <td className="py-2.5 px-3 whitespace-nowrap">
-                      <strong>{a.user_name}</strong> <span className="text-slate-400">({a.user_role})</span>
-                    </td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">{a.action}</td>
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                      {a.finding_id || a.rule_id || a.application_id || '—'}
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-700">{a.reason_comment || '—'}</td>
-                  </tr>
-                ))
+                audits.map((a) => {
+                  const isExpanded = expandedAuditId === a.id;
+                  return (
+                    <React.Fragment key={a.id}>
+                      <tr
+                        onClick={() => toggleAuditExpand(a.id)}
+                        className="hover:bg-slate-50 cursor-pointer select-none transition-colors"
+                      >
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">{a.created_at}</td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <strong>{a.user_name}</strong> <span className="text-slate-400">({a.user_role})</span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">{a.action}</td>
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                          {a.finding_id || a.rule_id || a.application_id || '—'}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-700 max-w-md truncate">
+                          {a.reason_comment || '—'}
+                        </td>
+                      </tr>
+                      {isExpanded && a.reason_comment && (
+                        <tr className="bg-slate-50/80">
+                          <td colSpan={5} className="px-4 py-2 text-[11px] text-slate-700 border-b border-slate-200">
+                            <span className="font-semibold text-slate-900 block mb-0.5">Full Written Justification:</span>
+                            <p className="italic bg-white p-2 rounded border border-slate-200 leading-relaxed">
+                              "{a.reason_comment}"
+                            </p>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>

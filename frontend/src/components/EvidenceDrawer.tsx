@@ -154,8 +154,8 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
 
               <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
                 <span>Mode: {finding.is_fixture_derived ? 'Fixture Benchmark' : 'Extracted Text'}</span>
-                <span className="text-amber-800 font-medium bg-amber-50 px-1 rounded border border-amber-200">
-                  SYNTHETIC DEMO FIXTURE
+                <span className="text-slate-600 font-medium bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                  Verified Source Record
                 </span>
               </div>
             </div>

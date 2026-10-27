@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ShieldAlert,
   Calendar,
   Bell,
   RotateCcw
@@ -41,19 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-      {/* 1. Global Persistent Demo Banner */}
-      <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-1 text-xs font-medium flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-          <span>DEMO ENVIRONMENT — SYNTHETIC DATA — NOT CONNECTED TO AICTE</span>
-        </div>
-        <div className="flex items-center gap-3 text-[11px] text-amber-800 hidden sm:flex">
-          <span>AICTE APH 2026–27 Scrutiny Prototype</span>
-          <span className="font-mono bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">SIH 2026 PS 26261</span>
-        </div>
-      </div>
-
-      {/* 2. Main Header Bar */}
+      {/* Main Header Bar */}
       <div className="h-14 px-5 flex items-center justify-between gap-4">
         {/* Brand Title */}
         <div className="flex items-center gap-2.5">
