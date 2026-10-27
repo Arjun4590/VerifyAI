@@ -98,58 +98,59 @@ The system seeds two synthetic cases. The primary demonstration application is:
 
 ---
 
-## 4. Getting Started & Setup Guide
+## 4. Getting Started & Deployment Guide
 
-### Prerequisites
-- **Python:** 3.10 to 3.13
-- **Node.js:** v18 or later (tested on Node v22)
-- **Git** (optional)
-- **Windows PowerShell** or Command Prompt
+### Option A: Frontend-Only Quickstart (Zero Backend Required, Vercel-Ready) ⭐
 
----
+VerifyAI is fully migrated to a **frontend-only, standalone architecture**! It runs directly in the browser using an embedded, complete 1.56 MB static data snapshot (`initialData.json`) containing all 2,042 handbook catalogue records, seeded applications, findings, rules, alerts, and audit logs. No Python, FastAPI, or SQLite server is required.
 
-### Step 1: Backend Setup & Initialization
-
-Open your first terminal in the project root:
-
+#### 1. Run Locally (Windows PowerShell)
 ```powershell
-# Navigate to project directory
-cd "C:\Users\arjun\OneDrive\Desktop\COLLEGE\Hackathons\SIH 26 PS 261"
-
-# Create and activate Python virtual environment
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-# Install required backend dependencies
-pip install fastapi uvicorn pydantic sqlalchemy openpyxl reportlab pymupdf pytest
-
-# (Optional) Run the automated test suite to verify backend health
-python -m pytest backend/tests -v
-
-# Start the FastAPI backend server
-python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-*The backend server will automatically initialize `verifyai.db`, generate the synthetic PDF document fixtures, import all 5 sheets from `handbook_extraction.xlsx`, and seed the demonstration cases on startup.*
-
----
-
-### Step 2: Frontend Setup & Launch
-
-Open a second terminal in the project root:
-
-```powershell
-# Navigate to the frontend directory
+# Navigate directly to the frontend directory
 cd "C:\Users\arjun\OneDrive\Desktop\COLLEGE\Hackathons\SIH 26 PS 261\frontend"
 
-# Install frontend dependencies (if not already installed)
+# Install dependencies (only needed once)
 npm install
 
 # Start the Vite development server
 npm run dev
 ```
+Open **`http://localhost:5173`** in your browser.
 
-Once started, open your browser and navigate to:  
-👉 **`http://localhost:5173`**
+#### 2. Deploy to Vercel (1-Click Static Frontend)
+VerifyAI can be deployed to Vercel in seconds without deploying any backend server:
+- **Git Repository:** Import `Arjun4590/VerifyAI`
+- **Framework Preset:** Vite
+- **Root Directory:** `frontend`
+- **Install Command:** `npm install`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **SPA Rewrites:** Pre-configured in `frontend/vercel.json` (`rewrites: [ { "source": "/(.*)", "destination": "/index.html" } ]`)
+
+---
+
+### Option B: Optional Full-Stack Development (Python FastAPI Backend)
+
+If you wish to run the original Python FastAPI backend for development, running PyTest suites, or inspecting the SQLite database:
+
+```powershell
+# In project root:
+cd "C:\Users\arjun\OneDrive\Desktop\COLLEGE\Hackathons\SIH 26 PS 261"
+
+# Create and activate virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install backend dependencies
+pip install fastapi uvicorn pydantic sqlalchemy openpyxl reportlab pymupdf pytest
+
+# (Optional) Run pytest test suite
+python -m pytest backend/tests -v
+
+# Start FastAPI server
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
 
 ---
 
