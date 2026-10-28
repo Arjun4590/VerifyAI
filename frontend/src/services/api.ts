@@ -25,11 +25,20 @@ import {
 export { setDemoRole, getDemoRole, getDemoUsername, resetLocalDemoData };
 
 // Configuration for API backend
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+const customBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL;
+const isStaticHost =
+  typeof window !== 'undefined' &&
+  !customBaseUrl &&
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1';
 
-let backendAvailable: boolean | null = null;
+const API_BASE_URL = customBaseUrl || '/api';
+
+// If on a static production host (like Vercel) without a specified VITE_API_BASE_URL,
+// immediately use client-side local storage without making failing network calls.
+let backendAvailable: boolean | null = isStaticHost ? false : null;
 let lastConnectivityCheck = 0;
-const CHECK_INTERVAL = 30000; // Check connectivity every 30s
+const CHECK_INTERVAL = 30000;
 
 export const getPersistenceMode = (): 'backend-sqlite' | 'client-storage' => {
   return backendAvailable === true ? 'backend-sqlite' : 'client-storage';
@@ -44,9 +53,14 @@ const getHeaders = () => {
 };
 
 /**
- * Checks if the FastAPI backend is running and responding.
+ * Checks if the FastAPI backend is running and responding with valid JSON.
  */
 export const checkBackendHealth = async (): Promise<boolean> => {
+  if (isStaticHost) {
+    backendAvailable = false;
+    return false;
+  }
+
   const now = Date.now();
   if (backendAvailable !== null && now - lastConnectivityCheck < CHECK_INTERVAL) {
     return backendAvailable;
@@ -63,9 +77,16 @@ export const checkBackendHealth = async (): Promise<boolean> => {
     });
     clearTimeout(timeoutId);
 
-    backendAvailable = res.ok;
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.includes('application/json')) {
+      backendAvailable = false;
+      lastConnectivityCheck = now;
+      return false;
+    }
+
+    backendAvailable = true;
     lastConnectivityCheck = now;
-    return res.ok;
+    return true;
   } catch (_e) {
     backendAvailable = false;
     lastConnectivityCheck = now;
@@ -74,21 +95,21 @@ export const checkBackendHealth = async (): Promise<boolean> => {
 };
 
 /**
- * Executes a network call to the backend if available, otherwise delegates to localApi.
+ * Executes a network call to the backend if available, otherwise delegates cleanly to localApi.
+ * Robust against Vercel HTML rewrites that return <!doctype html> with HTTP 200.
  */
 async function callBackendOrLocal<T>(
   backendPath: string,
   options: RequestInit | undefined,
   fallbackFn: () => Promise<T>
 ): Promise<T> {
-  // If backend was explicitly tested and failed, use fallback immediately
-  if (backendAvailable === false) {
+  if (backendAvailable === false || isStaticHost) {
     return fallbackFn();
   }
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
 
     const mergedOptions: RequestInit = {
       ...options,
@@ -102,28 +123,25 @@ async function callBackendOrLocal<T>(
     const res = await fetch(`${API_BASE_URL}${backendPath}`, mergedOptions);
     clearTimeout(timeoutId);
 
-    if (res.ok) {
-      backendAvailable = true;
-      lastConnectivityCheck = Date.now();
-      return (await res.json()) as T;
-    } else if (res.status === 404 || res.status >= 500) {
-      // Backend returned error; fallback to localApi
-      return fallbackFn();
-    } else {
-      // 400 or 403 or specific validation error from backend
-      const errData = await res.json().catch(() => ({ detail: 'Request failed' }));
-      throw new Error(errData.detail || `Request failed with status ${res.status}`);
-    }
-  } catch (err: any) {
-    if (err.name === 'AbortError' || err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
+    const contentType = res.headers.get('content-type') || '';
+    // If server returned HTML (e.g. Vercel SPA rewrite fallback) rather than JSON, fall back to local
+    if (!contentType.includes('application/json')) {
       backendAvailable = false;
       lastConnectivityCheck = Date.now();
       return fallbackFn();
     }
-    // If it was a business validation error, re-throw
-    if (err.message && !err.message.includes('fetch')) {
-      throw err;
+
+    if (res.ok) {
+      backendAvailable = true;
+      lastConnectivityCheck = Date.now();
+      return (await res.json()) as T;
+    } else {
+      // 404, 500 or other server errors: gracefully fall back to localApi
+      return fallbackFn();
     }
+  } catch (_err: any) {
+    backendAvailable = false;
+    lastConnectivityCheck = Date.now();
     return fallbackFn();
   }
 }

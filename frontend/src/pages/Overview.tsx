@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { api } from '../services/api';
+import { localApi } from '../services/localDataService';
 import { DashboardData, Application } from '../types';
 import { StatusChip } from '../components/StatusChip';
 
@@ -36,7 +37,17 @@ export const Overview: React.FC<OverviewProps> = ({ onOpenApplication, onNavigat
       setData(dashRes);
       setApplications(appsRes);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load dashboard data:', err);
+      try {
+        const [dashRes, appsRes] = await Promise.all([
+          localApi.getDashboard(),
+          localApi.getApplications()
+        ]);
+        setData(dashRes);
+        setApplications(appsRes);
+      } catch (fallbackErr) {
+        console.error('Fallback failed:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
