@@ -173,6 +173,13 @@ class Application(Base):
     evaluation_date = Column(String(20), default="2026-04-15")
     source_mode = Column(String(100), default="DEMO DATA — NOT CONNECTED TO AICTE")
 
+    institution_code = Column(String(50), default="AICTE-1-10928374")
+    intake_capacity = Column(Integer, default=420)
+    total_faculty = Column(Integer, default=28)
+    land_area_acres = Column(Float, default=5.25)
+    built_up_area_sqm = Column(Float, default=12450.0)
+    trust_name = Column(String(200), default="Demo Educational Trust")
+
     # Workflow Actions & History
     disposition = Column(String(100), nullable=True)
     disposition_comment = Column(Text, nullable=True)
@@ -195,6 +202,8 @@ class Application(Base):
     fields = relationship("ApplicationField", back_populates="application", cascade="all, delete-orphan")
     documents = relationship("Document", back_populates="application", cascade="all, delete-orphan")
     findings = relationship("Finding", back_populates="application", cascade="all, delete-orphan")
+    manual_tasks = relationship("ManualVerificationTask", back_populates="application", cascade="all, delete-orphan")
+    compliance_checklist = relationship("ComplianceChecklistItem", back_populates="application", cascade="all, delete-orphan")
 
 class ApplicationField(Base):
     __tablename__ = "application_fields"
@@ -335,3 +344,57 @@ class AuditEvent(Base):
     reason_comment = Column(Text, nullable=True)
     metadata_json = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class ManualVerificationTask(Base):
+    __tablename__ = "manual_verification_tasks"
+
+    id = Column(String(50), primary_key=True)  # TASK-014-01
+    application_id = Column(String(50), ForeignKey("applications.id"), nullable=False)
+    finding_id = Column(String(50), nullable=True)
+    rule_code = Column(String(50), nullable=False)
+    rule_id = Column(String(50), nullable=True)
+    title = Column(String(200), nullable=False)
+    trigger_reason = Column(Text, nullable=False)
+    linked_document_id = Column(String(50), nullable=True)
+    linked_document_name = Column(String(200), nullable=True)
+    relevant_rule_clause = Column(String(100), nullable=True)
+    previous_automated_result = Column(String(100), nullable=True)
+    assigned_reviewer = Column(String(100), default="Officer A")
+    status = Column(String(50), default="pending")
+    # 'pending', 'in_progress', 'verified', 'discrepancy', 'unable_to_verify', 'clarification_requested', 'not_applicable'
+    reviewer_remarks = Column(Text, nullable=True)
+    justification_note = Column(Text, nullable=True)
+    evidence_excerpt = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    completed_by = Column(String(100), nullable=True)
+
+    application = relationship("Application", back_populates="manual_tasks")
+
+class ComplianceChecklistItem(Base):
+    __tablename__ = "compliance_checklist_items"
+
+    id = Column(String(50), primary_key=True)  # CHK-014-01
+    application_id = Column(String(50), ForeignKey("applications.id"), nullable=False)
+    clause_ref = Column(String(50), nullable=False)
+    annexure = Column(String(50), default="Annexure 2")
+    section = Column(String(50), default="§2.1")
+    item_no = Column(String(20), nullable=True)
+    requirement_title = Column(String(200), nullable=False)
+    requirement_description = Column(Text, nullable=False)
+    is_mandatory = Column(Boolean, default=True)
+    automated_status = Column(String(50), default="not_evaluated")
+    # 'met', 'deficiency', 'needs_clarification', 'missing', 'not_evaluated'
+    manual_status = Column(String(50), default="pending")
+    # 'verified', 'discrepancy', 'in_progress', 'not_applicable', 'pending'
+    overall_status = Column(String(50), default="pending")
+    # 'compliant', 'non_compliant', 'under_review', 'pending'
+    linked_document_id = Column(String(50), nullable=True)
+    notes = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    application = relationship("Application", back_populates="compliance_checklist")
+
+from .database import init_db
+init_db()

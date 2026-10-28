@@ -14,6 +14,8 @@ from .models import (
     VerificationAttempt,
     Alert,
     AuditEvent,
+    ManualVerificationTask,
+    ComplianceChecklistItem
 )
 from .pdf_processor import generate_watermarked_pdf, extract_pdf_info
 from .rules_engine import evaluate_application
@@ -593,9 +595,158 @@ def seed_demo_data(db: Session) -> dict:
     )
     db.add(v_attempt)
 
+    # 8. Seed Manual Verification Tasks
+    db.query(ManualVerificationTask).delete()
+    tasks = [
+        ManualVerificationTask(
+            id="TASK-014-01",
+            application_id="VA-DEMO-2026-014",
+            finding_id="FIND-014-001",
+            rule_code="DOC-FIRE-EXPIRY",
+            rule_id="RULE-APH-001",
+            title="Fire Safety Certificate Expiry Verification",
+            trigger_reason="The extracted certificate validity date (2025-12-31) is earlier than the evaluation date (2026-04-15). Officer must verify whether renewal receipt or renewed NOC has been produced.",
+            linked_document_id="DOC-014-01",
+            linked_document_name="Fire_Safety_Certificate.pdf",
+            relevant_rule_clause="APH 2026–27 Ch. II §2.1.3 & Annexure 2 §2.1 Item 2",
+            previous_automated_result="Possible deficiency (Validity expired 2025-12-31)",
+            assigned_reviewer="Officer A",
+            status="pending",
+            reviewer_remarks=None,
+            evidence_excerpt="Fire Safety Certificate #FS-2023-8891 valid until: 2025-12-31"
+        ),
+        ManualVerificationTask(
+            id="TASK-014-02",
+            application_id="VA-DEMO-2026-014",
+            finding_id="FIND-014-002",
+            rule_code="DECL-FORM-STUDENT-DATA",
+            rule_id="RULE-APH-002",
+            title="Student Enrollment Affidavit vs Form Reconciliation",
+            trigger_reason="Form field marked 'No' for student data upload completion while submitted Affidavit Para 4 explicitly affirms full compliance. Reconciliation required.",
+            linked_document_id="DOC-014-02",
+            linked_document_name="Affidavit_Self_Disclosure.pdf",
+            relevant_rule_clause="APH 2026–27 Table 4.2 Para 4",
+            previous_automated_result="Needs clarification (Field 'No' vs Affidavit affirmation)",
+            assigned_reviewer="Officer A",
+            status="in_progress",
+            reviewer_remarks="Reviewed affidavit page 2, signed by Trust President. Form field entry appears to be a clerical typo during online submission.",
+            evidence_excerpt="Affidavit: 'Uploaded student data complete' | Structured Field: 'No'"
+        ),
+        ManualVerificationTask(
+            id="TASK-014-03",
+            application_id="VA-DEMO-2026-014",
+            finding_id="FIND-014-003",
+            rule_code="CHECKLIST-MISSING-DOC",
+            rule_id="RULE-APH-003",
+            title="Barrier-Free Built Environment & PwD Norms Inspection",
+            trigger_reason="Mandatory certificate of Barrier-Free Built Environment is missing from application dossier under Annexure 2 §2.1 Item 6.",
+            linked_document_id=None,
+            linked_document_name="Dossier Checklist",
+            relevant_rule_clause="Annexure 2 §2.1 Item 6 (Barrier-Free Architecture)",
+            previous_automated_result="Possible deficiency (Document missing from dossier)",
+            assigned_reviewer="Officer A",
+            status="pending",
+            reviewer_remarks=None,
+            evidence_excerpt="Checklist Item #6 (Annexure 2 §2.1): Not submitted"
+        ),
+        ManualVerificationTask(
+            id="TASK-014-04",
+            application_id="VA-DEMO-2026-014",
+            finding_id="FIND-014-004",
+            rule_code="ISSUER-VERIFY-CHECK",
+            rule_id="RULE-APH-004",
+            title="State Fire Services Issuer Registry Mismatch Follow-up",
+            trigger_reason="Simulated external state fire authority connector returned mismatch status 'Revoked / Not Renewed'. Requires officer verification with issuing division.",
+            linked_document_id="DOC-014-01",
+            linked_document_name="Fire_Safety_Certificate.pdf",
+            relevant_rule_clause="APH Ch. II Clause 4.1 External Verification Norms",
+            previous_automated_result="Needs clarification (Issuer registry mismatch simulated)",
+            assigned_reviewer="Officer A",
+            status="pending",
+            reviewer_remarks=None,
+            evidence_excerpt="Connector: Demo Issuer Connector (SIMULATED) | Result: Mismatch detected"
+        ),
+        ManualVerificationTask(
+            id="TASK-014-05",
+            application_id="VA-DEMO-2026-014",
+            finding_id="FIND-014-005",
+            rule_code="OCR-CONFIDENCE-LOW",
+            rule_id="RULE-APH-005",
+            title="Audited Accounts Operating Reserve Extraction Verification",
+            trigger_reason="OCR extraction pipeline flagged low confidence (62%) on operating reserve amount field from Balance Sheet.",
+            linked_document_id="DOC-014-04",
+            linked_document_name="Audited_Accounts_FY2024-25.pdf",
+            relevant_rule_clause="APH Table 5.1 Financial Operating Reserves",
+            previous_automated_result="Needs clarification (OCR confidence 62%)",
+            assigned_reviewer="Officer A",
+            status="verified",
+            reviewer_remarks="Manually inspected original PDF page 1. Figure is clearly legible as 'Rs. 45,00,000'. Matches audited balance sheet schedule III.",
+            justification_note="Visual inspection confirms amount meets AICTE operating reserve threshold.",
+            evidence_excerpt="Extracted: 'Rs. 45,00,000' (Confidence: 0.62) -> Verified visually",
+            completed_at=datetime.datetime.utcnow(),
+            completed_by="Officer A"
+        ),
+        ManualVerificationTask(
+            id="TASK-015-01",
+            application_id="VA-DEMO-2026-015",
+            finding_id=None,
+            rule_code="LAND-TITLE-REGISTRY",
+            rule_id="RULE-APH-006",
+            title="Land Ownership Sale Deed & Sub-Registrar Clearance",
+            trigger_reason="New technical institution application requires manual cross-check of 7.50 acres registered ownership deed.",
+            linked_document_id="DOC-015-01",
+            linked_document_name="Land_Title_Deed_Registered.pdf",
+            relevant_rule_clause="APH 2026–27 Ch. I §1.4 Land Norms",
+            previous_automated_result="Met (Self-reported 7.50 Acres >= 5.0 Acres required)",
+            assigned_reviewer="Officer B",
+            status="verified",
+            reviewer_remarks="Registered deed verified. Khasra / Survey Nos 102, 103, 104 in name of Trust registered for 99-year perpetual lease.",
+            justification_note="Clear title certificate issued by Government Pleader attached.",
+            evidence_excerpt="Registered Lease Deed Volume 442, Page 11-28, Sub-Registrar Office",
+            completed_at=datetime.datetime.utcnow(),
+            completed_by="Officer B"
+        ),
+        ManualVerificationTask(
+            id="TASK-015-02",
+            application_id="VA-DEMO-2026-015",
+            finding_id=None,
+            rule_code="BUILDING-COMPLETION-SANCTION",
+            rule_id="RULE-APH-007",
+            title="Approved Master Building Plan & Fire Staircase Layout",
+            trigger_reason="Physical verification of instructional area (9,500 sq.m) against municipal approved plan.",
+            linked_document_id="DOC-015-02",
+            linked_document_name="Municipal_Building_Plan_Approval.pdf",
+            relevant_rule_clause="APH 2026–27 Ch. I §1.6 Built-Up Area Norms",
+            previous_automated_result="Met (12,450 sq.m built-up exceeds required 8,000 sq.m)",
+            assigned_reviewer="Officer B",
+            status="pending",
+            reviewer_remarks=None,
+            evidence_excerpt="Municipal Sanction Order #MUN-B-2025-449"
+        )
+    ]
+    for t in tasks:
+        db.add(t)
+
+    # 9. Seed Compliance Checklist Items
+    db.query(ComplianceChecklistItem).delete()
+    checklists = [
+        ComplianceChecklistItem(id="CHK-014-01", application_id="VA-DEMO-2026-014", clause_ref="§2.1.1", annexure="Annexure 2", section="§2.1", item_no="1", requirement_title="Signed Self-Disclosure Affidavit", requirement_description="Self-disclosure in the prescribed format on non-judicial stamp paper affirmed by Chairman/Secretary.", is_mandatory=True, automated_status="met", manual_status="verified", overall_status="compliant", linked_document_id="DOC-014-02"),
+        ComplianceChecklistItem(id="CHK-014-02", application_id="VA-DEMO-2026-014", clause_ref="§2.1.2", annexure="Annexure 2", section="§2.1", item_no="2", requirement_title="Valid Fire Safety Certificate / NOC", requirement_description="Fire safety certificate issued by the competent Fire Service Authority of the concerned State/UT.", is_mandatory=True, automated_status="deficiency", manual_status="discrepancy", overall_status="non_compliant", linked_document_id="DOC-014-01", notes="Certificate validity lapsed 2025-12-31; renewed clearance mandatory."),
+        ComplianceChecklistItem(id="CHK-014-03", application_id="VA-DEMO-2026-014", clause_ref="§2.1.3", annexure="Annexure 2", section="§2.1", item_no="3", requirement_title="Structural Stability Certificate", requirement_description="Structural stability certificate issued by registered Structural Engineer confirming safety standards.", is_mandatory=True, automated_status="met", manual_status="verified", overall_status="compliant", linked_document_id="DOC-014-03"),
+        ComplianceChecklistItem(id="CHK-014-04", application_id="VA-DEMO-2026-014", clause_ref="§2.1.4", annexure="Annexure 2", section="§2.1", item_no="4", requirement_title="Building Occupancy Certificate", requirement_description="Occupancy Certificate / Completion Certificate issued by competent municipal authority.", is_mandatory=True, automated_status="met", manual_status="verified", overall_status="compliant", linked_document_id="DOC-014-03"),
+        ComplianceChecklistItem(id="CHK-014-05", application_id="VA-DEMO-2026-014", clause_ref="§2.1.5", annexure="Annexure 2", section="§2.1", item_no="5", requirement_title="Audited Balance Sheet & Financial Statements", requirement_description="Audited financial statement of preceding financial year showing operational viability and reserve.", is_mandatory=True, automated_status="needs_clarification", manual_status="in_progress", overall_status="under_review", linked_document_id="DOC-014-04"),
+        ComplianceChecklistItem(id="CHK-014-06", application_id="VA-DEMO-2026-014", clause_ref="§2.1.6", annexure="Annexure 2", section="§2.1", item_no="6", requirement_title="Barrier-Free Built Environment for PwD", requirement_description="Certificate of barrier-free environment, ramps, lifts, and disabled-friendly toilets per PwD Act.", is_mandatory=True, automated_status="missing", manual_status="pending", overall_status="non_compliant", notes="Certificate missing from submitted dossier."),
+        ComplianceChecklistItem(id="CHK-014-07", application_id="VA-DEMO-2026-014", clause_ref="§2.1.7", annexure="Annexure 2", section="§2.1", item_no="7", requirement_title="Internal Complaints Committee (ICC)", requirement_description="Constitution of ICC per Gender Sensitization and Prevention of Sexual Harassment regulations.", is_mandatory=True, automated_status="met", manual_status="verified", overall_status="compliant"),
+        ComplianceChecklistItem(id="CHK-014-08", application_id="VA-DEMO-2026-014", clause_ref="§2.1.8", annexure="Annexure 2", section="§2.1", item_no="8", requirement_title="Anti-Ragging Committee & Squad", requirement_description="Establishment of Anti-Ragging Committee and Squad as per AICTE Anti-Ragging Regulations.", is_mandatory=True, automated_status="met", manual_status="verified", overall_status="compliant"),
+        ComplianceChecklistItem(id="CHK-014-09", application_id="VA-DEMO-2026-014", clause_ref="§2.1.9", annexure="Annexure 2", section="§2.1", item_no="9", requirement_title="Student Enrollment & Faculty Portal Upload", requirement_description="Uploading of student enrollment and complete faculty cadre data on national AICTE portal.", is_mandatory=True, automated_status="needs_clarification", manual_status="pending", overall_status="under_review", notes="Reconciliation in progress."),
+        ComplianceChecklistItem(id="CHK-014-10", application_id="VA-DEMO-2026-014", clause_ref="§2.1.10", annexure="Annexure 2", section="§2.1", item_no="10", requirement_title="Processing Fee Payment Realization", requirement_description="Payment of regulatory processing fee and realization in AICTE accounts.", is_mandatory=True, automated_status="met", manual_status="verified", overall_status="compliant", linked_document_id="DOC-014-06")
+    ]
+    for c in checklists:
+        db.add(c)
+
     db.commit()
 
-    # 8. Run initial validation on VA-DEMO-2026-014 so findings, alerts, and audit trail are deterministically established!
+    # 10. Run initial validation on VA-DEMO-2026-014 so findings, alerts, and audit trail are deterministically established!
     val_run = evaluate_application(db, "VA-DEMO-2026-014", run_by="Officer A", evaluation_date=DEMO_EVALUATION_DATE)
 
     return {

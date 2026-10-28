@@ -70,9 +70,64 @@ export interface Finding {
   reviewed_at?: string;
 }
 
+export type ManualTaskStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'verified'
+  | 'discrepancy'
+  | 'unable_to_verify'
+  | 'clarification_requested'
+  | 'not_applicable';
+
+export interface ManualVerificationTask {
+  id: string;
+  application_id: string;
+  finding_id?: string;
+  rule_code: string;
+  rule_id?: string;
+  title: string;
+  trigger_reason: string;
+  linked_document_id?: string;
+  linked_document_name?: string;
+  relevant_rule_clause?: string;
+  previous_automated_result?: string;
+  assigned_reviewer: string;
+  status: ManualTaskStatus;
+  reviewer_remarks?: string;
+  justification_note?: string;
+  evidence_excerpt?: string;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+  completed_by?: string;
+}
+
+export type ChecklistAutomatedStatus = 'met' | 'deficiency' | 'needs_clarification' | 'missing' | 'not_evaluated';
+export type ChecklistManualStatus = 'pending' | 'in_progress' | 'verified' | 'discrepancy' | 'not_applicable';
+export type ChecklistOverallStatus = 'compliant' | 'non_compliant' | 'under_review' | 'pending';
+
+export interface ComplianceChecklistItem {
+  id: string;
+  application_id: string;
+  clause_ref: string;
+  annexure: string;
+  section: string;
+  item_no?: string;
+  requirement_title: string;
+  requirement_description: string;
+  is_mandatory: boolean;
+  automated_status: ChecklistAutomatedStatus;
+  manual_status: ChecklistManualStatus;
+  overall_status: ChecklistOverallStatus;
+  linked_document_id?: string;
+  notes?: string;
+  updated_at: string;
+}
+
 export interface Application {
   id: string;
   institution_name: string;
+  institution_code?: string;
   academic_year: string;
   nature_of_application: string;
   category_id: number;
@@ -85,6 +140,11 @@ export interface Application {
   rule_set_version: string;
   evaluation_date: string;
   source_mode: string;
+  intake_capacity?: number;
+  total_faculty?: number;
+  land_area_acres?: number;
+  built_up_area_sqm?: number;
+  trust_name?: string;
   disposition?: string;
   disposition_comment?: string;
   disposition_by?: string;
@@ -95,10 +155,15 @@ export interface Application {
   clarification_notes?: string;
   documents_count?: number;
   findings_count?: number;
+  pending_tasks_count?: number;
+  next_recommended_action?: string;
   updated_at: string;
+  notes?: string;
   fields?: ApplicationField[];
   documents?: DocumentItem[];
   findings?: Finding[];
+  manual_tasks?: ManualVerificationTask[];
+  compliance_checklist?: ComplianceChecklistItem[];
 }
 
 export interface Alert {
